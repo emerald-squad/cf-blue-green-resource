@@ -29,6 +29,10 @@ SPACE=$(jq -r '.source.space // ""' < $request)
 [[ -z "$ORG" ]]          && echo "'source.org' must be set to the organization for PCF deployment!" || echo "ORG : $ORG"
 [[ -z "$SPACE" ]]        && echo "'source.space' must be set to the space for PCF deployment!" || echo "SPACE : $SPACE"
 
+echo "What do we have here?"
+pwd
+ls -al .
+
 echo "Deploying application from"
 ls $APP_PATH
 
