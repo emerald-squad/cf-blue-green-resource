@@ -8,6 +8,10 @@ request=$(mktemp --tmpdir cf-blue-green-resource-out.XXXXXX)
 
 cat > $request <&0
 
+DIR=${1-$(pwd)}
+
+cd $DIR
+
 APP=$(jq -r '.params.name // ""' < $request)
 MANIFEST=$(jq -r '.params.manifest // ""' < $request)
 APP_PATH=$(jq -r '.params.path // ""' < $request)
@@ -28,10 +32,6 @@ SPACE=$(jq -r '.source.space // ""' < $request)
 [[ -z "$PASSWORD" ]]     && echo "'source.password' must be set to the password for PCF deployment!" || echo "PASSWORD : **********"
 [[ -z "$ORG" ]]          && echo "'source.org' must be set to the organization for PCF deployment!" || echo "ORG : $ORG"
 [[ -z "$SPACE" ]]        && echo "'source.space' must be set to the space for PCF deployment!" || echo "SPACE : $SPACE"
-
-echo "What do we have here?"
-pwd
-ls -al .
 
 echo "Deploying application from"
 ls $APP_PATH
