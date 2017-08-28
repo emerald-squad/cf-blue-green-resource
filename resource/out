@@ -96,10 +96,10 @@ then
     VERSION=$(date +%s)
     jq -n "{
         version: {timestamp: \"$VERSION\"},
-        metadata: {
-            deployed: \"$NEXT\",
-            url: \"https://${APP}.${DOMAIN}\"
-        }
+        metadata: [
+            { name: \"deployed\", value: \"$NEXT\"},
+            { name: \"url\", value: \"https://${APP}.${DOMAIN}\"}
+        ]
     }" >&3
 
     exit 0
