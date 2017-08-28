@@ -1,0 +1,6 @@
+---
+applications:
+- name: cf-blue-green-resource-test
+  buildpack: staticfile_buildpack
+  env:
+    FORCE_HTTPS: true

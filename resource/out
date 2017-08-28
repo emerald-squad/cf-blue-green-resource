@@ -1,0 +1,103 @@
+#!/bin/bash
+set -e
+
+exec 3>&1 # make stdout available as fd 3 for the result
+exec 1>&2 # redirect all output to stderr for logging
+
+request=$(mktemp --tmpdir cf-blue-green-resource-out.XXXXXX)
+
+cat > $request <&0
+
+APP=$(jq -r '.params.name // ""' < $request)
+MANIFEST=$(jq -r '.params.manifest // ""' < $request)
+APP_PATH=$(jq -r '.params.path // ""' < $request)
+HEALTH_CHECK=$(jq -r '.params.health_check // ""' < $request)
+
+API=$(jq -r '.source.api // ""' < $request)
+USER=$(jq -r '.source.username // ""' < $request)
+PASSWORD=$(jq -r '.source.password // ""' < $request)
+ORG=$(jq -r '.source.organization // ""' < $request)
+SPACE=$(jq -r '.source.space // ""' < $request)
+
+[[ -z "$APP" ]]          && echo "'params.app' must be set to the base PCF application name!" || echo "APP : $APP"
+[[ -z "$MANIFEST" ]]     && echo "'params.manifest' must be set to the path of the manifest file to deploy!" || echo "MANIFEST : $MANIFEST"
+[[ -z "$APP_PATH" ]]     && echo "'params.jar' must be set to the path of the application to deploy!" || echo "PATH : $APP_PATH"
+[[ -z "$HEALTH_CHECK" ]] && echo "'params.health_check' not set!" || echo "HEALTH_CHECK : $HEALTH_CHECK"
+[[ -z "$API" ]]          && echo "'source.api' must be set to the PCF API endpoint!" || echo "API : $API"
+[[ -z "$USER" ]]         && echo "'source.user' must be set to the username for PCF deployment!" || echo "USER : $USER"
+[[ -z "$PASSWORD" ]]     && echo "'source.password' must be set to the password for PCF deployment!" || echo "PASSWORD : **********"
+[[ -z "$ORG" ]]          && echo "'source.org' must be set to the organization for PCF deployment!" || echo "ORG : $ORG"
+[[ -z "$SPACE" ]]        && echo "'source.space' must be set to the space for PCF deployment!" || echo "SPACE : $SPACE"
+
+echo "cf login --skip-ssl-validation -a $API -u $USER -p ********** -o $ORG -s $SPACE"
+cf login --skip-ssl-validation -a $API -u $USER -p $PASSWORD -o "$ORG" -s "$SPACE"
+
+set +e
+cf routes | grep -oP "$SPACE\s+$APP\s+.+$APP-green" # verify if normal route is mapped to green app
+
+if [ $? -eq 0 ]
+then
+    CURRENT=$APP-green
+    NEXT=$APP-blue
+else
+    CURRENT=$APP-blue
+    NEXT=$APP-green
+fi
+
+echo "Current: $CURRENT"
+echo "New    : $NEXT"
+
+set -e
+
+DOMAIN=`cf domains | grep -oP '^(\S+\.com)'`
+
+export APP CURRENT NEXT DOMAIN
+
+echo "Deleting old $NEXT"
+cf delete -f -r $NEXT
+
+echo "Deploying and starting $NEXT for health check"
+cf push $NEXT -n $NEXT -p $APP_PATH -f "$MANIFEST"
+
+set +e
+
+[[ -z "$HEALTH_CHECK" ]] && echo "Skipping Health Check" || $HEALTH_CHECK
+
+if [ $? -eq 0 ]
+then
+    echo "Deleting $NEXT for health check"
+    cf delete -f -r $NEXT
+
+    echo "Deploying and starting $NEXT on main route (https://$APP.$DOMAIN)"
+    cf push $NEXT -n $APP -p $APP_PATH -f "$MANIFEST"
+
+    if [ $? -ne 0 ]
+    then
+        cf unmap-route $NEXT $DOMAIN -n $APP
+        echo "Unable to start new app instance (after health check)"
+        exit 1
+    fi
+
+    echo "Removing main route for $CURRENT"
+    cf unmap-route $CURRENT $DOMAIN -n $APP
+
+    echo "Stopping $CURRENT"
+    cf stop $CURRENT
+
+    echo "Deployement successful!"
+
+    VERSION=$(date +%s)
+    jq -n "{
+        version: {timestamp: \"$VERSION\"},
+        metadata: {
+            deployed: \"$NEXT\",
+            url: \"https://${APP}.${DOMAIN}\"
+        }
+    }" >&3
+
+    exit 0
+else
+    echo "Heath check failed!"
+    cf stop $NEXT
+    exit 1
+fi
