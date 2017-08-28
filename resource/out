@@ -29,6 +29,9 @@ SPACE=$(jq -r '.source.space // ""' < $request)
 [[ -z "$ORG" ]]          && echo "'source.org' must be set to the organization for PCF deployment!" || echo "ORG : $ORG"
 [[ -z "$SPACE" ]]        && echo "'source.space' must be set to the space for PCF deployment!" || echo "SPACE : $SPACE"
 
+echo "Deploying application from"
+ls $APP_PATH
+
 echo "cf login --skip-ssl-validation -a $API -u $USER -p ********** -o $ORG -s $SPACE"
 cf login --skip-ssl-validation -a $API -u $USER -p $PASSWORD -o "$ORG" -s "$SPACE"
 
