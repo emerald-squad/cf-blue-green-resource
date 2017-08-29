@@ -14,4 +14,6 @@ VERSION=$(jq -r '.version.timestamp // ""' < $request)
 
 [[ -z "$VERSION" ]] && VERSION=$(date +%s)
 
-echo "{\"version\": {\"timestamp\": $VERSION}}" | jq '.' >&3
+jq -n "{
+    version: {timestamp: \"$VERSION\"}
+}" >&3
