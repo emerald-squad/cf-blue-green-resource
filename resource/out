@@ -65,7 +65,7 @@ export APP CURRENT HOSTNAME NEXT DOMAIN
 echo "Deleting old ${APP}-${NEXT}"
 cf delete -f -r "${APP}-${NEXT}"
 
-echo "Deploying and starting ${APP}-${NEXT} with hostname ${HOSTNANE}-{$NEXT} for health check"
+echo "Deploying and starting ${APP}-${NEXT} with hostname ${HOSTNANE}-${NEXT} for health check"
 cf push "${APP}-${NEXT}" -n "${HOSTNAME}-${NEXT}" -p $APP_PATH -f "$MANIFEST"
 
 set +e
