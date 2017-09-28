@@ -1,0 +1,34 @@
+resource_types: 
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest
+
+resources:
+- name: cf-blue-green-resource-source
+  type: git
+  source: 
+    uri: https://github.com/emerald-squad/cf-blue-green-resource.git
+    branch: 'master'
+
+- name: docker-hub
+  type: docker-image
+  source:
+    repository: emeraldsquad/cf-blue-green-resource
+    username: {{docker-hub-username}}
+    password: {{docker-hub-password}}
+
+jobs:
+- name: publish
+  plan:
+  - aggregate:
+    - get: cf-blue-green-resource-source
+      trigger: true
+  - task: get-version
+    file: cf-blue-green-resource-source/ci/tasks/get-version.yml
+  - put: docker-hub
+    params:
+      build: cf-blue-green-resource
+      tag: version/version
+      tag_as_latest: true

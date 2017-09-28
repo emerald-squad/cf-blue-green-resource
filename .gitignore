@@ -1,0 +1,5 @@
+/.settings/
+.idea
+settings.json
+/.vscode
+ci/params.yml
