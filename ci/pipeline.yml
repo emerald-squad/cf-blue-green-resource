@@ -29,6 +29,6 @@ jobs:
     file: cf-blue-green-resource-source/ci/tasks/get-version.yml
   - put: docker-hub
     params:
-      build: cf-blue-green-resource
+      build: cf-blue-green-resource-source
       tag: version/version
       tag_as_latest: true
