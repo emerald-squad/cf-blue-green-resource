@@ -25,3 +25,37 @@ The application is always pushed with the app name suffixed by either `-blue`or 
 - `name` : *Required*. The name of the application. This is also used for the always available route to the app.
 - `manifest` : *Required*. The application manifest.
 - `path` : *Required*. Path to the application to deploy.
+
+## Example
+
+```
+resource_types: 
+
+- name: cf-blue-green-resource
+  type: docker-image
+  source:
+    repository: emeraldsquad/cf-blue-green-resource
+
+resources:
+- name: pcf
+  type: cf-blue-green-resource
+  source:
+    api: {{pcf-api}}
+    username: {{pcf-user}}
+    password: ((pcf-passwd))
+    organization: {{pcf-org}}
+    space: {{pcf-space}}
+
+jobs:
+  - name: blue-green-deploy
+    serial: true
+    public: false
+    plan:
+    - get: myapp
+    - put: pcf
+      params:
+        name: myapp
+        manifest: myapp/ci/manifest.yml
+        path: myapp/annuaire-service-*.jar
+        hostname: myapp
+```
