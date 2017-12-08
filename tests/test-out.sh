@@ -14,7 +14,26 @@ jq -n "
     params: {
         name: \"cf-blue-green-resource-test\",
         manifest: \"${DIR}/manifest.yml\",
-        path: \"${DIR}/app\"
+        path: \"${DIR}/app\",
+        post_install: \"$DIR/post_install.sh\"
     }
 }
-" | $DIR/../resource/out
+" | tee | $DIR/../resource/out
+
+
+jq -n "
+{
+    source: {
+        api: \"${CF_API}\",
+        username: \"${CF_USERNAME}\",
+        password: \"${CF_PASSWORD}\",
+        organization: \"${CF_ORG}\",
+        space: \"${CF_SPACE}\"
+    },
+    params: {
+        name: \"cf-blue-green-resource-test\",
+        manifest: \"${DIR}/manifest.yml\",
+        path: \"${DIR}/app\",
+    }
+}
+" | tee | $DIR/../resource/out

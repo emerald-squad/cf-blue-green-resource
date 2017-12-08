@@ -16,6 +16,7 @@ APP=$(jq -r '.params.name // ""' < $request)
 MANIFEST=$(jq -r '.params.manifest // ""' < $request)
 APP_PATH=$(jq -r '.params.path // ""' < $request)
 HEALTH_CHECK=$(jq -r '.params.health_check // ""' < $request)
+POST_INSTALL=$(jq -r '.params.post_install // ""' < $request)
 HOSTNAME=$(jq -r ".params.hostname // \"$APP\"" < $request)
 
 API=$(jq -r '.source.api // ""' < $request)
@@ -29,6 +30,7 @@ SPACE=$(jq -r '.source.space // ""' < $request)
 [[ -z "$MANIFEST" ]]     && echo "'params.manifest' must be set to the path of the manifest file to deploy!" || echo "MANIFEST : $MANIFEST"
 [[ -z "$APP_PATH" ]]     && echo "'params.jar' must be set to the path of the application to deploy!" || echo "PATH : $APP_PATH"
 [[ -z "$HEALTH_CHECK" ]] && echo "'params.health_check' not set!" || echo "HEALTH_CHECK : $HEALTH_CHECK"
+[[ -z "$POST_INSTALL" ]] && echo "'params.post_install' not set!" || echo "POST_INSTALL : $POST_INSTALL"
 [[ -z "$API" ]]          && echo "'source.api' must be set to the PCF API endpoint!" || echo "API : $API"
 [[ -z "$USER" ]]         && echo "'source.user' must be set to the username for PCF deployment!" || echo "USER : $USER"
 [[ -z "$PASSWORD" ]]     && echo "'source.password' must be set to the password for PCF deployment!" || echo "PASSWORD : **********"
@@ -92,6 +94,8 @@ then
 
     echo "Stopping ${APP}-${CURRENT}"
     cf stop "${APP}-${CURRENT}"
+
+    [[ -n "$POST_INSTALL" ]] && $POST_INSTALL
 
     echo "Deployement successful!"
 
