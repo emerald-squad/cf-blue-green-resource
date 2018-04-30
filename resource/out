@@ -91,6 +91,7 @@ then
 
     echo "Removing main route for ${APP}-${CURRENT}"
     cf unmap-route "${APP}-${CURRENT}" $DOMAIN -n $HOSTNAME
+    cf map-route "${APP}-${CURRENT}" $DOMAIN -n "$HOSTNAME-venerable" # autosleep needs a route to be able to unbind the application when it'll be deleted in next deploy
 
     echo "Stopping ${APP}-${CURRENT}"
     cf stop "${APP}-${CURRENT}"
