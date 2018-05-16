@@ -25,6 +25,7 @@ The application is always pushed with the app name suffixed by either `-blue`or 
 - `name` : *Required*. The name of the application. This is also used for the always available route to the app.
 - `manifest` : *Required*. The application manifest.
 - `path` : *Required*. Path to the application to deploy.
+- `domain` : The domain which should be used for the apps. By default the first domain is used.
 
 ## Example
 
