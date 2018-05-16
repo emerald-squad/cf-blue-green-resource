@@ -28,6 +28,7 @@ SPACE=$(jq -r '.source.space // ""' < $request)
 [[ -z "$APP" ]]          && echo "'params.app' must be set to the base PCF application name!" || echo "APP : $APP"
 [[ -z "$HOSTNAME" ]]     && echo "'params.hostname' must be set to the main route hostname!" || echo "HOSTNAME : $HOSTNAME"
 [[ -z "$MANIFEST" ]]     && echo "'params.manifest' must be set to the path of the manifest file to deploy!" || echo "MANIFEST : $MANIFEST"
+[[ -z "$DOMAIN" ]]       && echo "'params.domain' not set!" || echo "DOMAIN : $DOMAIN"
 [[ -z "$APP_PATH" ]]     && echo "'params.jar' must be set to the path of the application to deploy!" || echo "PATH : $APP_PATH"
 [[ -z "$HEALTH_CHECK" ]] && echo "'params.health_check' not set!" || echo "HEALTH_CHECK : $HEALTH_CHECK"
 [[ -z "$POST_INSTALL" ]] && echo "'params.post_install' not set!" || echo "POST_INSTALL : $POST_INSTALL"
@@ -60,7 +61,10 @@ echo "New    : ${APP}-${NEXT}"
 
 set -e
 
-DOMAIN=`cf domains | grep -oP '^(\S+\.com)'`
+if [[ -z $DOMAIN ]]
+then
+    DOMAIN=`cf domains | grep -Eo '^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}' | head -n 1`
+fi
 
 export APP CURRENT HOSTNAME NEXT DOMAIN
 
