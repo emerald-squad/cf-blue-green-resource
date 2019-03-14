@@ -8,4 +8,4 @@ request=$(mktemp --tmpdir cf-blue-green-resource-check.XXXXXX)
 
 cat > $request <&0
 
-echo '{"version": []}' | jq '.' >&3
+echo '[]' | jq '.' >&3
